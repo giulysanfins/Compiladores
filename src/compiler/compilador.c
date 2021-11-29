@@ -4,12 +4,26 @@
 
 #include "declaracoes.h"
 
-int linha_atual = 1;
-int rotulo,cont,end_disponivel;
+//---------------------------------------------------------------------------------
+//									VARIAVEIS GLOBAIS
+//---------------------------------------------------------------------------------
 
-//--Arquivo com o Codigo que sera gerado 
+// Variavel que aponta a linha atual em analise
+int linha_atual = 1;
+
+// Variavel que controla o rotulo disponivel para os comando de mudança de fluxo de execuçao
+int rotulo;
+
+// Variavel contadora que controla a quantidade de variaveis criadas em cada sub programa
+int cont;
+
+// Variavel que indica qual o eh o endereço disponivel para memoria
+int end_disponivel;
+
+// Arquivo que contera o codigo de maquina que sera gerado 
 FILE *codigo;
-//--Arquivo com o outuput se deu certo ou erro
+
+// Arquivo com o outuput para interface, se deu certo ou errado
 FILE *output_arquivo;
 
 //---------------------------------------------------------------------------------
@@ -26,17 +40,27 @@ FILE *output_arquivo;
 //	Funcao de inserir elemento na pilha
 //----------------------------------------------
 
+// Funcionalidade: Insere um novo item na tabela de simbolos.              
+// Comunicaçao:    Recebe pelos parametros, uma palavra para lexema, para  
+//                 tipo, para escopo e um inteiro para memoria, e o endereço
+//                 base da tabe_simbolo.  
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo são feitas por referencia.
 void insere_tabela(Stack *tab_simbolo, char *lexema, char *tipo, char *escopo, int *memoria)
 {
-    //pelo que parece na chamada dessa funcao seja necessario inserir o tipo
+    /* Variavel de mesmo tipo da tabela de simbolo usada para formar o proximo elemento a
+    ser inserido.*/
     stack_element element_aux;
+
+    /* A variavel de elemento auxiliar, da tabela de simbolo, recebe as informaçoes dos parametros
+    respectivos, lexema, tipo, escopo e memoria, então é inserido na pilha da tabela de simbolos.   
+    */
     element_aux.lexema = lexema;
     element_aux.escopo = escopo;
     element_aux.tipo = tipo;
     if(memoria != NULL){
         element_aux.memoria = *memoria;
     }
-    // insere na pilha o elemento criado
     push(tab_simbolo, element_aux);
     
 }
@@ -45,11 +69,19 @@ void insere_tabela(Stack *tab_simbolo, char *lexema, char *tipo, char *escopo, i
 //	Funcao auxliar para imprimir a pilha
 //----------------------------------------------
 
+// Funcionalidade: Imprimir os conteudos da pilha tabela de simbolos.              
+// Comunicaçao:    Recebe o endereço base da tabela de simbolos.
+//                 Não devolve, ou altera, qualquer informação.
 void imprimirTabela(Stack *lista)
 {
+    /* Variavel do mesmo tipo da tabela de simbolos, usada para se movimentar
+    pelos nós da pilha e não perder o endereço base da tabela de simbolos*/
     Stack p;
-    p = *lista; //p tem endereço do no do topo
+    p = *lista; 
     
+    /* Enquanto não chegar ao fim da tabela de simbolos eh impresso o conteudo
+    de cada nó.
+    */
     while (p.top != NULL)
     {
         printf("--------------------\n");
@@ -64,17 +96,30 @@ void imprimirTabela(Stack *lista)
 }
 
 //----------------------------------------------
-//	Funcao de identificar e pegar o token
+//	Funcao de consultar e pegar o token
 //----------------------------------------------
 
-//Essa funcao deveria retornar os dados quando encontrado, mas e caso nao seja encontrado
+//Essa funcao deveria retornar os dados quando encontrado
+// Funcionalidade: Retornar o primeiro elemento da tabela de simbolos
+//                 em que o lexema desejado eh encontrado.
+// Comunicaçao:    Recebe o endereço base da tabela de simbolos e o 
+//                 lexema desejado.
+//                 Devolve o elemento da tabela de simbolos encontrado.
 stack_element consultar_tab(Stack *tab_simbolo, char *lexema)
 {
-
+    /* Variavel do mesmo tipo da tabela de simbolos, usada para se movimentar
+    pelos nós da pilha e não perder o endereço base da tabela de simbolos*/
     Stack tab_aux;
     tab_aux = *tab_simbolo;
+
+    /* Variavel de mesmo tipo da tabela de simbolo usada para formar o proximo elemento a
+    ser inserido.*/
     stack_element element_aux;
 
+    /* Pesquisa na tabela de simbolo o nó que possui o mesmo lexema que o lexema 
+    passado pelo parametro, caso encontre esse elemento é retornado, caso nao o 
+    fluxo é interrompido, e a mensagem de erro é apresentada.
+    */
     while (tab_aux.top != NULL && !strcmp(tab_aux.top->info.lexema,lexema) == 0)
     {
         tab_aux.top = tab_aux.top->link;
@@ -87,7 +132,6 @@ stack_element consultar_tab(Stack *tab_simbolo, char *lexema)
         }
     }
     
-    //Erro caso nao tenha encontrado
     printf("Identificador procurado não consta na tabela de simbolo\n");
     fprintf(output_arquivo,"Linha:%d\nIdentificador procurado não consta na tabela de simbolo.\n",linha_atual);
     exit(1);
@@ -97,18 +141,30 @@ stack_element consultar_tab(Stack *tab_simbolo, char *lexema)
 //	Funcao para colocar tipo nas variaveis
 //----------------------------------------------
 
+// Funcionalidade: Troca o tipo das variaveis para seu tipo definido 
+//                 arquivo original.
+// Comunicaçao:    Recebe o endereço inicial da tabela de simbolos e  
+//                 a string com o tipo da(s) variavel(is).
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo são feitas por referencia.
 void colocar_tipo(Stack *tab_simbolo, char *tipo)
 {
-    /*tirar da pilha original trocar o tipo salvar em uma pilha auxiliar
-	quando nao for mais elemento do tipo variavel ir tirando da pilha auxiliar
-	e recolocar na pilha original */
+    // Pilha auxiliar
     Stack tab_aux;
     initStack(&tab_aux);
+
+    /* Variavel de mesmo tipo da tabela de simbolo usada para formar o proximo elemento a
+    ser inserido.*/
     stack_element element_aux;
 
-    //tire o elemento e troca o seu campo tipo
+    /* Tira um elemento do topo da pilha original(tabela de simbolo), verifica o tipo 
+    desse elemento se for "variavel" ele recebe o tipo passado pelo parametro, entao 
+    esse elemento é inserido na pilha auxiliar. Quando o elemento em analise nao for
+    mais uma variavel o ultimo elemento retirado é inserido novamente na pilha original
+    e um loop inicia retirando os elementos da pilha auxiliar e colocando na original.    
+    */
     element_aux = pop(tab_simbolo);
-    //enquanto nao for o final da pilha e tipo diferente de variavel
+
     while (!isEmpty(*tab_simbolo) && element_aux.tipo == "variavel")
     {
         element_aux.tipo = tipo;
@@ -129,63 +185,45 @@ void colocar_tipo(Stack *tab_simbolo, char *tipo)
 //	Funcao Analise de variavel duplicada na Tabela
 //----------------------------------------------
 
+// Funcionalidade: Pesquisa na tabela de simbolos se um determinado lexema
+//                 de uma variavel ja existe na tabela.
+// Comunicaçao:    Recebe o endereço inicial da tabela de simbolos e  
+//                 a string com o lexema desejado.
+//                 Devolve um inteiro que indica se existe variavel com o mesmo lexema na tabela.
 int pesquisa_duplicvar_tabela(Stack *tab_simbolo, char *lexema){
     printf("\n-- Entrou em duplicvar --\n");
 
-    /*
-    a) se ele for uma variável verificar se já não existe outra variável visível 
-    (Por visível considera-se como aquele que pode ser encontrado na Tabela de Símbolos atual.)
-    de mesmo nome no mesmo nível de declaração e verificar se já não existe outro identificador de
-    mesmo nome (que não seja uma variável) em qualquer nível inferior ou igual ao da variável agora analisada.
-    */
-
+    /* Variavel do mesmo tipo da tabela de simbolos, usada para se movimentar
+    pelos nós da pilha e não perder o endereço base da tabela de simbolos*/
     Stack tab_aux;
     tab_aux = *tab_simbolo;
-    //stack_element element_aux;
-    //int flag_aux = 0;
     
-    //Verificar no mesmo nivel se existe alguma VARIAVEL com o mesmo nome.
-    //a pilha auxiliar tem os mesmos conteudos da tabela original
-    //printf("\nTabela original \n");
-    //imprimirTabela(tab_simbolo);
-    //printf("Tabela auxiliar \n");
-    //imprimirTabela(&tab_aux);
-
-    while(tab_aux.top != NULL && tab_aux.top->info.escopo != "x"){
-        //printf("Tipo (tabela): %s\n",tab_aux.top->info.tipo);
-        //printf("Lexema (tabela): %s\nLexema (analisado): %s\n",tab_aux.top->info.lexema, lexema);
-        //printf("Nivel: %s\n--------------------\n",tab_aux.top->info.escopo);
-        //acho que um esta como z\0 e outro só z 
+    /* Verifica na tabela de simbolos se no mesmo nivel de declaração existe uma variavel com o mesmo 
+    lexema da variavel em analise, caso encontre retorna 1 indicando que existe duplicata.  
+    */
+    while(tab_aux.top != NULL && tab_aux.top->info.escopo != "x"){ 
         if((strcmp(tab_aux.top->info.tipo,"variavel") == 0 || strcmp(tab_aux.top->info.tipo,"inteiro") == 0 || strcmp(tab_aux.top->info.tipo,"booleano") == 0) && strcmp(tab_aux.top->info.lexema,lexema) == 0){
-            //entao se o elemento analisado da tabela de simbolo for do tipo variavel e de mesmo nome, dentro do mesmo nivel
-            //significa que eh uma duplicata
-            //printf("entrou variavel de mesmo lexema\n");
-            return 1; //achou duplicidade
+            return 1; 
         }
         tab_aux.top = tab_aux.top->link;
     }
 
-    //Verificar no nivel restante se existe algo que nao seja uma variavel com o mesmo lexema
+    /* Verifica no restante da tabela de simbolos, alem do nivel de declaração anterior, se existe algo
+    diferente de uma variavel com o mesmo lexema, se existir retorna 1 indicando que o lexema ja está em uso.
+    Caso em nenhuma das verificaçoes seja encontrado o mesmo lexema na tabela de simbolo retorna 0 indicando
+    que o lexema analisado nao esta em uso.
+    */
     while(tab_aux.top != NULL){
-        //printf("Tipo (tabela): %s\n",tab_aux.top->info.tipo);
-        //printf("Lexema (tabela): %s\nLexema (analisado): %s\n",tab_aux.top->info.lexema, lexema);
-        //printf("Nivel: %s\n",tab_aux.top->info.escopo);
-        
         if(!(strcmp(tab_aux.top->info.tipo,"variavel") == 0 || strcmp(tab_aux.top->info.tipo,"inteiro") == 0 || strcmp(tab_aux.top->info.tipo,"booleano") == 0)){
-            //printf("nao é uma variavel\n--------------------\n");
             if(strcmp(tab_aux.top->info.lexema,lexema) == 0){
-                //entao se o elemento analisado da tabela de simbolo nao for do tipo variavel e de mesmo nome
-                //significa que o nome é uma duplicata
-                //printf("Não é uma variavel e tem o mesmo lexema\n");
-                return 1; //achou duplicidade
+                return 1; 
             }
         }
         tab_aux.top = tab_aux.top->link;
     }
 
-    //Caso nao tenha encontrado duplicidade
     if (tab_aux.top == NULL){
-        return 0;   //nao tem duplicata
+        return 0;   
     }
 }
 
@@ -193,38 +231,32 @@ int pesquisa_duplicvar_tabela(Stack *tab_simbolo, char *lexema){
 //	Funcao Analise de func/proc duplicada na Tabela
 //----------------------------------------------
 
+// Funcionalidade: Pesquisa na tabela de simbolos se um determinado lexema
+//                 de uma funcao ja existe na tabela.
+// Comunicaçao:    Recebe o endereço inicial da tabela de simbolos e  
+//                 a string com o lexema desejado.
+//                 Devolve um inteiro que indica se existe funcao com o mesmo lexema na tabela.
 int pesquisa_duplicfunc_tabela(Stack *tab_simbolo, char *lexema){
     printf("\n-- Entrou em duplicfunc --\n");
 
-    /*
-    b) Se for o nome de um procedimento ou função verificar se já não existe um outro
-    identificador visível de qualquer tipo em nível igual ao inferior ao agora analisado.
-    */
-
+    /* Variavel do mesmo tipo da tabela de simbolos, usada para se movimentar
+    pelos nós da pilha e não perder o endereço base da tabela de simbolos*/
     Stack tab_aux;
     tab_aux = *tab_simbolo;
-    //stack_element element_aux;
-    //int flag_aux = 0;
 
-    //printf("Tabela original \n");
-    //imprimirTabela(tab_simbolo);
-    //printf("Tabela auxiliar \n");
-    //imprimirTabela(&tab_aux);
-
+    /* Verifica em toda tabela de simbolos se o lexema em analise ja foi declarado na tabela, 
+    se existir retorna 1 indicando que o lexema ja está em uso.
+    Caso nao seja retorna 0 indicando que o lexema analisado nao esta em uso.
+    */
     while(tab_aux.top != NULL){
-        //printf("Tipo (tabela): %s\n",tab_aux.top->info.tipo);
-        //printf("Lexema (tabela): %s\nLexema (analisado): %s\n",tab_aux.top->info.lexema, lexema);
-        //printf("Nivel: %s\n--------------------\n",tab_aux.top->info.escopo);
         if(strcmp(tab_aux.top->info.lexema,lexema) == 0){
-            //printf("encontrou mesmo lexema\n");
-            return 1; //achou duplicidade
+            return 1;
         }
         tab_aux.top = tab_aux.top->link;  
     }
 
-    //Caso nao tenha encontrado duplicidade
     if (tab_aux.top == NULL){
-        return 0;   //nao tem duplicidade
+        return 0;   
     }
 }
 
@@ -232,39 +264,36 @@ int pesquisa_duplicfunc_tabela(Stack *tab_simbolo, char *lexema){
 //	Funcao Analise existencia de identificador
 //----------------------------------------------
 
+// Funcionalidade: Pesquisa na tabela de simbolos se um determinado lexema
+//                 ja existe na tabela e verifica se é compativel com uso.
+// Comunicaçao:    Recebe o endereço inicial da tabela de simbolos e  
+//                 a string com o lexema desejado.
+//                 Devolve um inteiro que indica se o lexema ja existe na tabela.
 int pesquisa_existencia(Stack *tab_simbolo,char *lexema){
     printf("\n-- Entrou em pesquisa existencia --\n");
-    /*
-    Sempre que for detectado um identificador, verificar se ele foi declarado (está visível na tabela de símbolos) 
-    e é compatível com o uso (exemplo: variável usada que existe como nome de programa ou de procedimento na tabela 
-    de símbolos deve dar erro).
-    */
+
+    /* Variavel do mesmo tipo da tabela de simbolos, usada para se movimentar
+    pelos nós da pilha e não perder o endereço base da tabela de simbolos*/
     Stack tab_aux;
     tab_aux = *tab_simbolo;
 
-    //printf("Tabela original \n");
-    //imprimirTabela(tab_simbolo);
-
+    /* Sempre que um identificador for detectado, verificar se ele foi declarado na tabela de simbolos, 
+    e é compatível com o uso. Se o lexema for encontrado e nao for o mesmo do nome de programa retorna 1 indicando 
+    que existe na tabelacaso seja encontrado, mas é o mesmo do nome do programa, ou caso nao seja encontrado 
+    retorna 0 indicando erro.
+    */
     while(tab_aux.top != NULL){
-        //printf("Tipo (tabela): %s\n",tab_aux.top->info.tipo);
-        //printf("Lexema (tabela): %s\nLexema (analisado): %s\n",tab_aux.top->info.lexema,lexema);
-
         if(strcmp(tab_aux.top->info.lexema,lexema) == 0){
-            //printf("encontrou mesmo lexema\n");
-            //se for nome do programa deve dar erro
             if(strcmp(tab_aux.top->info.tipo,"nomedeprograma")==0){
-                //printf("nome de programa nao deve ser chamado para uso");
-                return 0; //achou mas nao pode usar
+                return 0; 
             }
-            return 1; //achou e pode usar
+            return 1; 
         }
-
         tab_aux.top = tab_aux.top->link;
     }
 
-    //Caso nao tenha encontrado a variavel
     if (tab_aux.top == NULL){
-        return 0;   //nao achou
+        return 0;   
     }
 
 }
@@ -273,19 +302,26 @@ int pesquisa_existencia(Stack *tab_simbolo,char *lexema){
 //	Funcao Desempilha
 //----------------------------------------------
 
+// Funcionalidade:  Retira os elementos da tabela de simbolo até a primeira marcaçao
+//                  de escopo, e escrever o DALLOC no arquivo do codigo de maquina. 
+// Comunicaçao:     Recebe o endereço inicial da tabela de simbolo.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  a tabela de simbolo são feitas por referencia.
 void desempilha_nivel(Stack *tab_simbolo){
     printf("\n-- Entrou em desempilha --\n");
+    /* Altera o indicador do topo da pilha(o ultimo elemento) da tabela de simbolos
+    até que o elemento analisado esteja marcado com x no campo do escopo, então retira
+    essa marca, e escreve no arquivo de codigo de maquina gerado o DALLOC com o numero 
+    de variaveis a serem desalocadas, atraves da variavel global cont.
+    */
     while(tab_simbolo->top != NULL && tab_simbolo->top->info.escopo != "x"){
        tab_simbolo->top = tab_simbolo->top->link;
     }
-    //tirar a marca x do token
-    //talvez testar esse tirar marca
+    
     if(tab_simbolo->top->info.escopo == "x"){
         tab_simbolo->top->info.escopo = "";
     }
 
-    //PARTE DO DALLOC
-    //printf("%d %d",end_disponivel, cont);
     if(cont != 0){
         end_disponivel = end_disponivel-cont;
         fprintf(codigo," ,DALLOC,%d,%d\n",end_disponivel,cont);
@@ -297,25 +333,35 @@ void desempilha_nivel(Stack *tab_simbolo){
 //	Funcao Pesquisa tabela
 //----------------------------------------------
 
+// Funcionalidade: Pesquisar na tabela de simbolo se um determinado lexema é uma variavel ou 
+//                 funcao de acordo com seu tipo.
+// Comunicaçao:    Recebe da funcao analisa fator o endereço inicial da tabela de simbolo 
+//                 recebe um lexema e uma variavel para identificação do tipo do elemento 
+//                 em analise.
 int pesquisa_tabela(Stack *tab_simbolo, char *lexema, int *ind){
     printf("\n-- Entrou em pesquisa tabela --\n");
+    /* Variavel do mesmo tipo da tabela de simbolos, usada para se movimentar
+    pelos nós da pilha e não perder o endereço base da tabela de simbolos*/
     Stack tab_aux;
     tab_aux = *tab_simbolo;
-    while(tab_aux.top != NULL){ //&& tab_aux.top->info.escopo != "x"
-        //se existir o lexema dentro do escopo
+
+    /* Pesquisa na tabela de simbolos o lexema passado pelo parametro, caso encontre verifica seu tipo, se for
+    uma funcao booleano ou inteira troca o valor da variavel ind para 1 indicando ser uma funcao, senao altera
+    o valor da variavel ind para 2 indicando ser uma variavel, entao retorna 1 indicando que foi encontrado; 
+    Caso nada seja encontrado na tabela de simbolos retorna 0.   
+    */
+    while(tab_aux.top != NULL){
         if(strcmp(tab_aux.top->info.lexema,lexema) == 0){
             //se for funcao
             if(strcmp(tab_aux.top->info.tipo,"funcao inteiro") == 0 || strcmp(tab_aux.top->info.tipo,"funcao booleano") == 0){
                 *ind=1;
             }else{
-            //se for variavel
                 *ind=2;
             }
             return 1;
         }
         tab_aux.top = tab_aux.top->link;
     }
-    //se nao existir
     return 0;
 }
 
@@ -329,15 +375,24 @@ int pesquisa_tabela(Stack *tab_simbolo, char *lexema, int *ind){
 //									LEXICAL
 //---------------------------------------------------------------------------------
 
+// Funcionalidade: Ler o arquivo do codigo de entrada e retornar o proximo token 
+//                 desse arquivo.
+// Comunicaçao:    Recebe da funcao main() o endereço atual do arquivo do codigo 
+//                 de entrada. Retorna o proximo token formado.
 tokens lexico(FILE *p)
 {
+    // Variavel que contem o caracter em analise do arquivo de entrada.
     char ch;
-    tokens token;
-    ch = fgetc(p);
 
+    // Variavel auxiliar do mesmo tipo da funcao que recebera as informacoes e será retornada para main() 
+    tokens token;
+
+    /* Verifica se o caracter em analise eh comentario(o que estiver entre chaves) ou algum tipo de espaço
+    e o consome, caso nao seja comentario ou espaço, verifica se chegou ao fim do arquivo, caso nao seja, chama
+    a funcao para formar o token e preenche-lo, entao o retorna para a funcao main()  
+    */
+    ch = fgetc(p);
     while(ch == '{' ||(ch == ' ') || (ch == '\n') || (ch == '\t') || (ch == '\r') ){
-    
-    //Tratamento de comentario
     if (ch == '{')
     {
         while ((ch != '}') && ch != EOF)
@@ -349,7 +404,6 @@ tokens lexico(FILE *p)
 
     if ((ch == ' ') || (ch == '\n') || (ch == '\t') || (ch == '\r'))
     {
-        //Tratamento de espaços
         while ((ch == ' ') || (ch == '\n') || (ch == '\t') || (ch == '\r') && ch != EOF)
         {
             if (ch == '\n')
@@ -364,12 +418,10 @@ tokens lexico(FILE *p)
 
     if (ch != EOF)
     {
-        // Apos consumir todos comentarios e espaços
         pega_token(p, ch, &token);
     }
     else
     {
-        //Caso seja necessario verificar fim de arquivo noutra função
         preencher_token(&token, "eof", "seof");
     }
 
@@ -381,8 +433,17 @@ tokens lexico(FILE *p)
 //	Funcao de identificar e pegar o token
 //----------------------------------------------
 
+// Funcionalidade:  Verifica qual o caracter em analise e chama a funcao
+//                  que ira trata-lo.
+// Comunicaçao:     Recebe da funcao token() o endereço do arquivo de entrada,
+//                  o caracter em analise e o endereço do token que sera formado.
 void pega_token(FILE *p, char ch, tokens *token)
 {
+    /* Verifica se o caracter eh um digito, uma letra, dois pontos, operadores
+    aritmeticos ou relacionais, ou se eh alguma pontuaçao, então chama a funcao
+    que ira fazer o tratamento especifico em cada caso, e se nao for nenhuma
+    das opcao indica erro.
+    */
     if (eh_digito(ch))
     {
         trata_digito(p, ch, token);
@@ -423,23 +484,34 @@ void pega_token(FILE *p, char ch, tokens *token)
 //	Funcao verificar se o char eh digito
 //----------------------------------------------
 
+// Funcionalidade:  Verifica se o caracter em analise eh um digito.
+// Comunicaçao:     Recebe da funcao pega_token() o caracter em 
+//                  analise. Retorna um inteiro que indica se eh
+//                  um digito ou nao.
 int eh_digito(char ch)
 {
-    //considerando que a leitura do arquivo eh sempre um char, verifico se o char lido tem o aschii entre 48 e 57 se eh [0-9]
+    /* Verifica o valor na tabela aschii do caracter em analise se eh igual ou esta entre 48 e 57
+    (valor da tabela aschii dos digitos [0-9])
+    */
     if (ch >= 48 && ch <= 57)
-        return 1; //qualquer coisa diferente de 0 é true
+        return 1; 
     else
-        return 0; //0 ehh considera falso em c
+        return 0; 
 }
 
 //----------------------------------------------
 //	Funcao verificar se o char eh letra
 //----------------------------------------------
 
+// Funcionalidade:  Verifica se o caracter em analise eh uma letra.
+// Comunicaçao:     Recebe da funcao pega_token() o caracter em 
+//                  analise. Retorna um inteiro que indica se eh
+//                  uma letra ou nao.
 int eh_letra(char ch)
 {
-    //para diminuir um if podemos deixer com que qualquer caracter se torne maiusculo e o if verifica so do 65-90
-    //ch = toupper(ch); mas precisariamos adicionar uma biblioteca ctype.h
+    /* Verifica o valor na tabela aschii do caracter em analise se eh igual
+    ou esta entre 65 e 90 ou 97 e 122(valor da tabela aschii das letras [a-z] ou [A-Z]).
+    */
     if ((ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122))
         return 1;
     else
@@ -450,12 +522,23 @@ int eh_letra(char ch)
 //	Funcao de tratamento caso digito
 //----------------------------------------------
 
+// Funcionalidade:  Verificar os caracteres subsequente para formar
+//                  o numero completo, e preenche o token.
+// Comunicaçao:     Recebe da funcao token() o endereço do arquivo de entrada,
+//                  o caracter em analise e o endereço do token que sera formado.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  no token são feitas por referencia.
 void trata_digito(FILE *p, char ch, tokens *token)
 {
+    // Variavel que contera a string do numero formado.
     char *num = malloc(sizeof(char));
     *num = ch;
     ch = fgetc(p);
 
+    /* Enquanto o caracter em analise for um digito adiciona na variavel que 
+    contem a string do numero formado, quando nao for mais digito o token eh
+    preenchido.
+    */
     while (eh_digito(ch))
     {
         size_t tam = strlen(num);
@@ -474,12 +557,24 @@ void trata_digito(FILE *p, char ch, tokens *token)
 //	Funcao de tratamento caso palavra
 //----------------------------------------------
 
+// Funcionalidade:  Verificar os caracteres subsequente para formar
+//                  o numero completo, e preenche o token.
+// Comunicaçao:     Recebe da funcao token() o endereço do arquivo de entrada,
+//                  o caracter em analise e o endereço do token que sera formado.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  no token são feitas por referencia.
 void trata_identPalav(FILE *p, char ch, tokens *token)
 {
+    // Variavel que contera a string da palavra formada.
     char *id = malloc(sizeof(char));
     *id = ch;
     ch = fgetc(p);
 
+    /* Enquanto o caracter em analise for uma letra o adiciona na variavel que 
+    contem a string da palavra formada, quando nao for mais letra  verifica se
+    a palavra formada eh uma palavra reservada e entao preenche o token com o 
+    simbolo correto.
+    */
     while (eh_letra(ch) || eh_digito(ch) || ch == '_')
     {
         size_t tam = strlen(id);
@@ -585,8 +680,17 @@ void trata_identPalav(FILE *p, char ch, tokens *token)
 //	Funcao de tratamento caso atribuicao
 //----------------------------------------------
 
+// Funcionalidade:  Verificar o caractere subsequente para tratar
+//                  atribuiçao
+// Comunicaçao:     Recebe da funcao token() o endereço do arquivo de entrada,
+//                  o caracter em analise e o endereço do token que sera formado.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  no token são feitas por referencia.
 void trata_atribuicao(FILE *p, char ch, tokens *token)
 {
+    /* Verifica se o caracter depois dos dois pontos eh um igual, se for preenche o
+    token com o simbolo satribuicao, senao sdoispontos.
+    */
     ch = fgetc(p);
     if (ch == '=')
     {
@@ -603,9 +707,17 @@ void trata_atribuicao(FILE *p, char ch, tokens *token)
 //	Funcao de tratamento de operador aritmetico
 //----------------------------------------------
 
-//Trata operador aritmetico + - *
+// Funcionalidade:  Verifica o caracter com um operador aritmetico e
+//                  preenche o token. 
+// Comunicaçao:     Recebe da funcao token() o endereço do arquivo de entrada,
+//                  o caracter em analise e o endereço do token que sera formado.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  no token são feitas por referencia.
 void trata_opArit(FILE *p, char ch, tokens *token)
 {
+    /* Se o caracter for um '+' preenche o token com smais, '-' com smenos
+    '*' com smult.
+    */
     if (ch == '+')
     {
         preencher_token(token, "+", "smais");
@@ -624,9 +736,18 @@ void trata_opArit(FILE *p, char ch, tokens *token)
 //	Funcao de tratamento de operador relacional
 //----------------------------------------------
 
+// Funcionalidade:  Verifica o caracter com um operador relacional e  
+//                  preenche o token. 
+// Comunicaçao:     Recebe da funcao token() o endereço do arquivo de entrada,
+//                  o caracter em analise e o endereço do token que sera formado.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  no token são feitas por referencia.
 void trata_opRela(FILE *p, char ch, tokens *token)
 {
-    //Trata operador relacional < > =
+    /* Caso o carater seja o operador de maior, verifica se o proximo caracter
+    eh um igual e entao faz o preenchimento correto, faz o mesmo para o operador 
+    de menor e esclamaçao (para o diferente)
+    */
     if (ch == '>')
     {
         ch = fgetc(p);
@@ -682,8 +803,18 @@ void trata_opRela(FILE *p, char ch, tokens *token)
 //	Funcao de tratamento de pontuacao
 //----------------------------------------------
 
+// Funcionalidade:  Verifica o caracter com uma pontuacao e  
+//                  preenche o token.
+// Comunicaçao:     Recebe da funcao token() o endereço do arquivo de entrada,
+//                  o caracter em analise e o endereço do token que sera formado.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  no token são feitas por referencia.
 void trata_pontuacao(FILE *p, char ch, tokens *token)
 {
+    /* Verifica o caracter com uma pontuacao e preenche o token(lexema e simbolo) de 
+    acordo com o caracter, '.' recebe sponto no simbolo, ';' recebe sponto_virgula, 
+    ',' recebe svirgula, '(' recebe sabre_parenteses, e ')' recebe sfecha_parenteses.
+    */
     if (ch == '.')
     {
         preencher_token(token, ".", "sponto");
@@ -710,8 +841,16 @@ void trata_pontuacao(FILE *p, char ch, tokens *token)
 //	Funcao de preenchimento do token
 //----------------------------------------------
 
+// Funcionalidade:  Inserir nos campos lexema e simbolo da variavel token as 
+//                  respectivas informaçoes dos paramentros.
+// Comunicaçao:     Recebe o endereço do token, a string do lexema e do simbolo.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  no token são feitas por referencia.
 void preencher_token(tokens *token, char lexema[], char simbolo[])
 {
+    /* Eh alocado para campo lexema da variavel token espaço para receber o lexema
+    do parametro, entao os campos lexema e simbolo recebem as informaçoes respectivas.  
+    */
     int lex_tam = strlen(lexema);
     int sim_tam = strlen(simbolo);
     token->lexema = (char *)malloc(sizeof(lex_tam));
@@ -733,37 +872,50 @@ void preencher_token(tokens *token, char lexema[], char simbolo[])
 //	Funcao infix to posfix
 //----------------------------------------------
 
+// Funcionalidade:  Funcao que transforma expressao infixa para
+//                  posfixa.
+// Comunicaçao:     Recebe uma Lista ligada com a expressao infixa.
+//                  Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                  na Lista ligada são feitas por referencia.
 void infix_posfix(Lista *fila_aux){
     printf("\n-- Entrou em infix to posfix --\n");
-    //se precisa desalocar as Listas e como faze-lo
-    //pilha para posfix
+
+    // Pilha com operadores para auxiliar a realizaçao do posfix
     Stack pilha_aux;
     initStack(&pilha_aux);
 
-    //expressao posfix
+    // Lista ligada que tera a expressao posfix
     Lista saida;
     init_fila(&saida);
 
-    //andar na fila
+    /* Variavel do mesmo tipo da Lista ligada, usada para se movimentar
+    pelos nós da Lista e não perder seu endereço base*/
     item_fila *x;
     x=fila_aux->inicio;
 
-    //auxiliar elemento 
+    /* Variavel de mesmo tipo do item da Lista ligada usada para receber o elemente em
+    analise da expressao*/
     stack_element elemento_aux;
 
-    //enquanto nao chega ao fim da expressao 
+    /* Verifica cada elemento da expressao: 
+        Caso ele seja um abre parentesses o insere na pilha auxiliar.
+        Caso seja uma variavel, um numero, verdadeiro ou falso insere na Lista de saida (da expressao posfix).
+        Caso seja um operador insere na pilha auxiliar caso ela esteja vazia, caso nao esteja verifica a 
+    precedencia do operador em analise e operador no topo da pilha auxiliar e enquanto a precedencia do 
+    elemento da pilha for maior ele eh inserido na Lista de saida, quando deixar de ser maior insere na pilha 
+    auxiliar o elemento em analise.
+        Caso seja um fecha parentes retira elementos da pilha auxiliar inserindo-os na Lista de saida, ate 
+        encontrar um abre parentes.
+    */
     while(x != NULL){
        
-        if(strcmp(x->info.lexema,"(") == 0){ //se eh abre parentesses
-            //insere na pilha
+        if(strcmp(x->info.lexema,"(") == 0){ 
             push(&pilha_aux,x->info);
         }
-        else if(strcmp(x->info.tipo,"identificador") == 0 || strcmp(x->info.tipo,"numero") == 0 || strcmp(x->info.lexema,"verdadeiro") == 0 || strcmp(x->info.lexema,"falso") == 0){  //se eh variavel ou numero
-            //insere na saida
+        else if(strcmp(x->info.tipo,"identificador") == 0 || strcmp(x->info.tipo,"numero") == 0 || strcmp(x->info.lexema,"verdadeiro") == 0 || strcmp(x->info.lexema,"falso") == 0){  
             inserir_fila(&saida,x->info);
         }
         else if(strcmp(x->info.tipo,"operador") == 0){
-            //pop da pilha
             if(isEmpty(pilha_aux)){
                 push(&pilha_aux,x->info);
             }else{
@@ -775,7 +927,6 @@ void infix_posfix(Lista *fila_aux){
                         elemento_aux = peek(&pilha_aux);
                     }               
                 }
-                //push(&pilha_aux,elemento_aux);
                 push(&pilha_aux,x->info);
             }
             
@@ -807,7 +958,15 @@ void infix_posfix(Lista *fila_aux){
 //	Funcao Precedencia
 //----------------------------------------------
 
+// Funcionalidade:  Analisa a precedencia de um determinado operador.
+// Comunicaçao:     Recebe o operador.
+//                  Retorna um inteiro que indicara o valor de precedencia.
 int precedencia(char* operador){
+    /* Caso seja o operador de numero positivo ou negativo retorna 8, caso seja os operadores de
+    multiplicacao e divisao retorna 7, caso seja soma ou subtraçao retorna 6, caso seja qualquer 
+    operador relacional retorna 5, caso seja de negaçao retorna 4, caso seja de and retorna 3,
+    caso seja ou retorna 2, se nao for nenhuma das opcoes retorna 1.
+    */
     if(strcmp(operador,"-u") == 0 || strcmp(operador,"+u") == 0){ //(+ positivo, - negativo)
         return 8;
     }else if(strcmp(operador,"*") == 0 || strcmp(operador,"div") == 0){ // (*,div)
@@ -831,30 +990,37 @@ int precedencia(char* operador){
 //	Funcao Analise Semantica
 //----------------------------------------------
 
+// Funcionalidade:  Analisa se o tipo do resultado da expressao corresponde
+//                  ao tipo da funcao ou variavel.
+// Comunicaçao:     Recebe o endereço base da tabela de simbolo, o endereço
+//                  da Lista ligada da expressão analisada, e uma string do
+//                  o tipo a ser comparado.
 void analise_semantica(Stack *tab_simbolo,Lista *fila_aux,char *cmp_tipo){
     printf("\n-- Entrou em analise semantica --\n");
 
-    //andar na fila
+    /* Variavel do mesmo tipo da Lista ligada, usada para se movimentar
+    pelos nós da Lista e não perder seu endereço base*/
     item_fila *x;
     x=fila_aux->inicio;
 
+    // Lista auxiliar com copia da Lista ligada da expressao
     Lista aux;
     init_fila(&aux);
 
-    //auxiliar elemento 
+    // Variaveis do mesmo tipo dos elementos da Lista ligada para guardar elementos para comparaçoes dos tipos 
     stack_element anterior_old, anterior_new, aux_elem;
 
     int i=1;
     int tipo;
 
-    //antes de fazer a analise, mudar o campo tipo dos identificadores e numeros
+    /* Verifica os elementos da Lista da expressao trocando o tipo dos elementos que são numeros e funçoes, para
+    simplificar os if's de comparaçao de tipo, e copia os elementos da expressao para a Lista auxiliar.
+    */
     while(x != NULL){
         inserir_fila(&aux,x->info);
         if(strcmp(x->info.tipo,"identificador") == 0){
             x->info.tipo = consultar_tab(tab_simbolo,x->info.lexema).tipo;
 
-            // fizemos essa medida paleativa para aceitar funcao no meio da expressao
-            // Se mexer o titanic afunda
             if(strcmp(x->info.tipo,"funcao inteiro") == 0){
                 x->info.tipo = "inteiro";
             }
@@ -872,12 +1038,15 @@ void analise_semantica(Stack *tab_simbolo,Lista *fila_aux,char *cmp_tipo){
     //---------
     x=fila_aux->inicio;
     
+    /* Verifica cada elemento da funcao enquanto nao é um operador sao salvos os dois ultimos elementos, quando
+    um operador é encontrado de acordo com a operação são analisados o primeira elemento anterior a operacao ou
+    os dois elementos anteriores, entao o tipo do(s) elemento(s) é analisado e uma resposta colocando o tipo 
+    (inteiro ou booleano) dependendo da operacao pode ser gerada e alterada na Lista Ligada da expressao.
+    Entao volta do inicio da lista ligada da expressao procurando o proximo operador, e fazer novamente a analise
+    dos tipos dependendo da operação encontrada.
+    */
     while(x != NULL){
-        //imprimir_fila(fila_aux);
-        //printf("\n\n");
-        //deve percorrer ate o 1 operador
         if(strcmp(x->info.tipo,"operador") == 0){ 
-            //ver qual operador eh e ver o que ele espera (1-2 args) e o tipo q espera
             tipo = tipo_operador(x->info.lexema);
 
             if(tipo==1){ // * div + -
@@ -993,8 +1162,10 @@ void analise_semantica(Stack *tab_simbolo,Lista *fila_aux,char *cmp_tipo){
         }
     }
     
-    //verificar se o tipo da expressao é correspondente a funcao q chamou
-    //se mexer o titanic afunda
+    /* Com a expressao analisada resta um ultimo elemento com a resposta e o tipo resultante, entao ele sera analisado
+    com o tipo passado pelo parametro (variavel cmp_tipo), caso os tipos nao sejam correspondentes o fluxo de execucao
+    eh interrompido, caso esteja correto eh chamada uma funcao para gerar o codigo de maquina desse expressao.
+    */
     if(strcmp(cmp_tipo,"funcao inteiro")==0||strcmp(cmp_tipo,"funcao booleano")==0||strcmp(fila_aux->inicio->info.tipo,"funcao inteiro")==0||strcmp(fila_aux->inicio->info.tipo,"funcao booleano")==0){
         if(strcmp(cmp_tipo,"funcao inteiro")==0||strcmp(fila_aux->inicio->info.tipo,"funcao inteiro")==0){
             fila_aux->inicio->info.tipo = "inteiro";
@@ -1004,7 +1175,7 @@ void analise_semantica(Stack *tab_simbolo,Lista *fila_aux,char *cmp_tipo){
             cmp_tipo = "booleano";
         }
     }
-    //printf("tipo: %s %s\n %s\n",fila_aux->inicio->info.lexema,fila_aux->inicio->info.tipo, cmp_tipo);
+    
     if(!strcmp(fila_aux->inicio->info.tipo,cmp_tipo) == 0){
         //erro
         printf("Incompatibilidade de tipo da expressao com o comando desejado. Linha: %d\n",linha_atual);
@@ -1014,7 +1185,6 @@ void analise_semantica(Stack *tab_simbolo,Lista *fila_aux,char *cmp_tipo){
     }
     printf("Nenhuma Incompatibilidade de tipo encontrada\n");
 
-    //Gera codigo da expressao
     gera_cod_expressao(tab_simbolo,&aux);
     
 }
@@ -1023,7 +1193,14 @@ void analise_semantica(Stack *tab_simbolo,Lista *fila_aux,char *cmp_tipo){
 //	Funcao tipo
 //----------------------------------------------
 
+// Funcionalidade: Indicar qual a classe do operador em analise, para informar qual fluxo
+//                 deve ser seguido de acordo com a operação na funcao analise_semantica().
+// Comunicaçao:    Recebe o operador em analise da funcao analise_semantica().
+//                 Retorna um inteiro que indica a classe do operador.
 int tipo_operador(char* operador){
+    /* Verifica qual o operador, caso seja aritmetico retorna 1, caso seja operador unitario (positivo e negativo)
+    retorna 2, caso operador relacional retorna 3, caso "ou" ou "e" retorna 4, e caso negação retorna 5, senao erro.
+    */
     if(strcmp(operador,"*") == 0 || strcmp(operador,"div") == 0 || strcmp(operador,"+") == 0 || strcmp(operador,"-") == 0){
         return 1;
     }else if(strcmp(operador,"-u") == 0 || strcmp(operador,"+u") == 0){ 
@@ -1043,24 +1220,28 @@ int tipo_operador(char* operador){
 
 
 //----------------------------------------------
-//	Funcao tipo
+//	Funcao gerar codigos da expressao
 //----------------------------------------------
 
+// Funcionalidade: Gerar o codigo de maquina da expressao posfixa
+// Comunicaçao:    Recebe a tabela de simbolos e a Lista ligada da expressao.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na Lista ligada são feitas por referencia.
 void gera_cod_expressao(Stack *tab_simbolo, Lista *aux){
     printf("-- Entrou em gera codigo da expressao --\n");
-    //imprimir_fila(aux);
-    //printf("\n\n");
-    //imprimirTabela(tab_simbolo);
-
-    //andar na fila
+    /* Variavel do mesmo tipo da Lista ligada, usada para se movimentar
+    pelos nós da Lista e não perder seu endereço base*/
     item_fila *x;
     x=aux->inicio;
 
+    // Variaveis do mesmo tipo dos elementos da Lista ligada
     stack_element elem_aux;
 
+    /* Verifica cada elemento da expressao e de acordo com o que ele eh sao gerados os comandos
+    em codigo de maquina e adicionado ao arquivo de saida.  
+    */
     while(x != NULL){
         if(strcmp(x->info.tipo,"identificador")==0){
-            //ver qual identificador que é variavel ou funcao se tem diferenca
             elem_aux = consultar_tab(tab_simbolo,x->info.lexema);
 
             if(strcmp(elem_aux.tipo,"funcao inteiro")==0|| strcmp(elem_aux.tipo,"funcao booleano") == 0){
@@ -1069,10 +1250,7 @@ void gera_cod_expressao(Stack *tab_simbolo, Lista *aux){
             }else{
                 fprintf(codigo," ,LDV,%d, \n",elem_aux.memoria);
             }
-            //ver como uma funcao pode ser chamada no meio de uma expressao e se ja nao estamos trando isso no chamada de funcao
-        
         }else if(strcmp(x->info.tipo,"numero")==0){
-            //basta gerar o LDC com o lexema do numero
             fprintf(codigo," ,LDC,%s, \n",x->info.lexema);
 
         }else if(strcmp(x->info.lexema,"verdadeiro")==0){
@@ -1082,7 +1260,6 @@ void gera_cod_expressao(Stack *tab_simbolo, Lista *aux){
             fprintf(codigo," ,LDC,%d, \n",0);
 
         }else if(strcmp(x->info.tipo,"operador")==0){
-            //aqui verificar cada lexema
             if(strcmp(x->info.lexema,"*") == 0){
                 fprintf(codigo," ,MULT, , \n");
 
@@ -1095,7 +1272,7 @@ void gera_cod_expressao(Stack *tab_simbolo, Lista *aux){
             }else if(strcmp(x->info.lexema,"-") == 0){
                 fprintf(codigo," ,SUB, , \n");
 
-            }else if(strcmp(x->info.lexema,"-u") == 0){ //perguntar a respeito do +u
+            }else if(strcmp(x->info.lexema,"-u") == 0){ 
                 fprintf(codigo," ,INV, , \n");
 
             }else if(strcmp(x->info.lexema,">") == 0){
@@ -1145,10 +1322,17 @@ void gera_cod_expressao(Stack *tab_simbolo, Lista *aux){
 //	Funcao Analisa Bloco
 //----------------------------------------------
 
+// Funcionalidade: Chama as funcoes de analise das variaveis, subrotinas e comandos.
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_bloco(FILE *p, tokens *token, Stack *tab_simbolo ){
     printf("\n-- Entrou em analisa bloco --\n");
-    printf("(Token) Simbolo: %s (Token) Lexico: %s Linha: %d\n",token->simbolo,token->lexema,linha_atual);
 
+    /* Pega a proxima palavra e simbolo(token) do arquivo de entrada e chama as funcoes para
+    analise das partes declaradas na bloco de comando, variaveis, subrotinas e comandos.
+    */
 	*token = lexico(p);
 	analisa_et_variaveis(p,token, tab_simbolo); //talvez seja necessario salvar o valor de contador ao sair dessa func
 	analisa_subrotinas(p,token,tab_simbolo);
@@ -1159,10 +1343,20 @@ void analisa_bloco(FILE *p, tokens *token, Stack *tab_simbolo ){
 //	Funcao Etapa de declaracao de variaveis
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica da etapa de declaracao de variaveis
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_et_variaveis(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa_et_variaveis --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
+    /* Verifica se o token em analiseeh o simbolo de inicio da etapa de declaraçao de variaveis
+    entao verifica se o proximo eh um identificador e enquanto for chama a funcao de analise da
+    variavel, se depois do ponto e virgula houver outro identificador analisa novamente as proximas
+    variaveis.
+    */
 	if(token->simbolo == "svar")
 	{        
 		*token = lexico(p);        
@@ -1173,10 +1367,8 @@ void analisa_et_variaveis(FILE *p, tokens *token, Stack *tab_simbolo){
 				analisa_variaveis(p, token, tab_simbolo);
 				if(token->simbolo == "sponto_virgula")
 				{
-					//Lexico(token);
                     *token = lexico(p);
 
-                    //Caso aqui tenha mais uma linha de declaracao de variavel {<declaração de variáveis>;}
                     if(token->simbolo == "sidentificador"){
                         analisa_variaveis(p, token, tab_simbolo);
                         if(token->simbolo == "sponto_virgula"){
@@ -1184,7 +1376,6 @@ void analisa_et_variaveis(FILE *p, tokens *token, Stack *tab_simbolo){
                         }
                     }
                     
-                    //pega o proximo token e volta o analisa bloco
                     return;
 					
 				}else{
@@ -1208,22 +1399,30 @@ void analisa_et_variaveis(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Analisa variaveis
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica da variaveis da etapa de declaracao de variaveis
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_variaveis(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa variaveis --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
     
     int aux_cont_var = 0, aux_end_disp = end_disponivel;
     //cont = 0;
+
+    /* Verifica se a variavel ja havia sido declarada, se nao for insere essa variavel na tabela de simbolo,
+    isso é feito até que seja encontrado o dois pontos, para entao adicionar o tipo da(s) variavel(is), e 
+    então gera o codigo de maquina de allocaçao.  
+    */
 	while(token->simbolo != "sdoispontos"){
 		if(token->simbolo == "sidentificador")
 		{
 
-            //Pesquisa_duplicvar_tabela(token.lexema)
-            if(!pesquisa_duplicvar_tabela(tab_simbolo, token->lexema))//1- duplicacao 0- sem duplicacao
+            if(!pesquisa_duplicvar_tabela(tab_simbolo, token->lexema))
             {
-                //insere_tabela(token.lexema,"variavel")
                 aux_cont_var++;
-                insere_tabela(tab_simbolo, token->lexema, "variavel","", &end_disponivel); //talvez colocar o end disponivel utilizado
+                insere_tabela(tab_simbolo, token->lexema, "variavel","", &end_disponivel); 
                 end_disponivel++;
 
                 *token = lexico(p);
@@ -1233,7 +1432,7 @@ void analisa_variaveis(FILE *p, tokens *token, Stack *tab_simbolo){
                     if(token->simbolo == "svirgula")
                     {
                         *token = lexico(p);
-                        if(token->simbolo == "sdoispontos") // ,:
+                        if(token->simbolo == "sdoispontos") 
                         {
                             //erro
                             printf("esperado identificador apos virgula\n");
@@ -1272,10 +1471,20 @@ void analisa_variaveis(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Analisa tipo das variaveis
 //----------------------------------------------
 
+// Funcionalidade: Verificar se o tipo definido na declaraçao das variaveis eh 
+//                 permitido ou nao.
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_tipo(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa tipo --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
+    /* Verifica se o token depois dos dois pontos na declaraçao das variaveis
+    eh diferente de inteiro ou booleano, senao for entao chama a funcao que
+    colocará os tipo correto nas variaveis declaradas.
+    */
     if(token->simbolo != "sinteiro" && token->simbolo != "sbooleano")
     {
         //erro
@@ -1285,7 +1494,6 @@ void analisa_tipo(FILE *p, tokens *token, Stack *tab_simbolo){
     }
     else
     {
-        //coloca_tipo_tabela(token.lexema)
         colocar_tipo(tab_simbolo, token->lexema);
         *token = lexico(p);
     }
@@ -1295,20 +1503,32 @@ void analisa_tipo(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Analisa subrotinas <etapa de declaração de sub-rotinas>
 //----------------------------------------------
 		
+// Funcionalidade: Analise sintatica da etapa de declaracao de subrotinas
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_subrotinas(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa_subrotinas --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
    
     int aux_cont;
 
-    int auxrot, flag;   //Def auxrot, flag inteiro
-    flag = 0;           //flag = 0
+    int auxrot, flag;   
+    flag = 0;           
     
-    if((token->simbolo == "sprocedimento") || (token->simbolo == "sfuncao")){   //if (token.simbolo = sprocedimento) ou (token.simbolo = sfunção)
-        auxrot = rotulo;                                                        //auxrot := rotulo
-        fprintf(codigo," ,JMP,%d, \n",rotulo);                                    //GERA('		',JMP,rotulo,'		')		{Salta sub-rotinas}
-        rotulo = rotulo + 1;                                                    //rotulo:= rotulo + 1
-        flag = 1;                                                               //flag = 1
+    /* Verifica se o token em analise eh um identificador de inicio de procedimento 
+    ou funcao, caso seja, a funcao de analise sintatica respectiva eh chamada, e quando 
+    voltar caso o proximo token seja outro identificador de inicio de procedimento ou
+    funcao faz o mesmo processo novamente. Alem disso gera os comandos em codigo de 
+    maquina responsaveis por indicar para qual instruçao deve ir para começar o 
+    fluxo de execuçao dos comandos daquela determinada funcao, procedimento ou main.
+    */
+    if((token->simbolo == "sprocedimento") || (token->simbolo == "sfuncao")){   
+        auxrot = rotulo;                                                        
+        fprintf(codigo," ,JMP,%d, \n",rotulo);                                  
+        rotulo = rotulo + 1;                                                    
+        flag = 1;                                                               
     }
     while((token->simbolo == "sprocedimento")||(token->simbolo == "sfuncao")){
         aux_cont = cont;
@@ -1329,28 +1549,39 @@ void analisa_subrotinas(FILE *p, tokens *token, Stack *tab_simbolo){
         }
     }
     
-    if(flag == 1){                              //if flag = 1
-        fprintf(codigo,"%d,NULL, , \n",auxrot);    //entao Gera(auxrot,NULL,´ ´,´ ´) {início do principal}
+    if(flag == 1){                              
+        fprintf(codigo,"%d,NULL, , \n",auxrot);    
     }
 }
 
 //----------------------------------------------
 //	Funcao Analisa declaracao de procedimento
 //----------------------------------------------
-    
+
+// Funcionalidade: Analise sintatica da declaracao de procedimentos
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia. 
 void analisa_declaracao_procedimento(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa_declaracao_procedimento --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
     *token = lexico(p);
-    //nivel:="L"(marca ou novo galho)
+    
+    /* Apos identificado inicio da declaracao do procedimento eh verificado o nome dado ao procedimento
+    se ja foi declarado anteriormente, se nao foi eh entao inserido na tabela de simbolos, gerado o codigo
+    de maquina para saltar para o inicio desse procedimento, então a funcao de analisar bloco com declaracao
+    de variaveis, subrotinas e comandos desse procedimento, e depois de fazer a analise total do procedimento
+    é retirado da tabela de simbolos todas as declaraçoes feitas dentro do procedimento e gerado o comando de 
+    retorno ao fim.
+    */
     if(token->simbolo == "sidentificador"){
-        //pesquisa_declproc_tabela(token.lexema)
         if(!pesquisa_duplicfunc_tabela(tab_simbolo,token->lexema)){
-            insere_tabela(tab_simbolo,token->lexema,"procedimento","x", &rotulo); //{guarda na TabSimb},
+            insere_tabela(tab_simbolo,token->lexema,"procedimento","x", &rotulo); 
                       
-            fprintf(codigo,"%d,NULL, , \n",rotulo);   //Gera(rotulo,NULL,´ ´,´ ´) {CALL irá buscar este rótulo na TabSimb}           
-            rotulo = rotulo +1;                     //rotulo:= rotulo+1
+            fprintf(codigo,"%d,NULL, , \n",rotulo); 
+            rotulo = rotulo +1;                     
             
             *token = lexico(p);
             
@@ -1375,48 +1606,53 @@ void analisa_declaracao_procedimento(FILE *p, tokens *token, Stack *tab_simbolo)
         fprintf(output_arquivo,"Linha: %d\nDepois de procedimento esperado nome do procedimento.\n",linha_atual);
         exit(1);
     }
-    //DESEMPILHA OU VOLTA NÍVEL
-    //printf("\nAntes de desempilhar\n");
-    //imprimirTabela(tab_simbolo);
-    desempilha_nivel(tab_simbolo); //Provavelmente tera o dalloc
+    
+    desempilha_nivel(tab_simbolo); 
     fprintf(codigo," ,RETURN, , \n");
-    //printf("\nDepois de desempilhar\n");
-    //imprimirTabela(tab_simbolo);
+    
 }
 
 //----------------------------------------------
 //	Funcao Analisa declaracao de funcao
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica da declaracao de funçoes
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_declaracao_funcao(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa declaracao de funcao --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
 	*token = lexico(p);
 	
+    /* Apos identificado inicio da declaracao de funcao eh verificado o nome dado ao procedimento
+    se ja foi declarado anteriormente, se nao foi eh entao inserido na tabela de simbolos, gerado o codigo
+    de maquina para saltar para o inicio desse procedimento, entao eh verificado o tipo declarado da funcao 
+    e atualizado seu tipo na tabela de simbolos, então a funcao de analisar bloco com declaracao
+    de variaveis, subrotinas e comandos desse procedimento, e depois de fazer a analise total do procedimento
+    é retirado da tabela de simbolos todas as declaraçoes feitas dentro do procedimento e gerado o comando de 
+    retorno ao fim.
+    */
 	if(token->simbolo == "sidentificador"){
-        //pesquisa_declfunc_tabela(token.lexema)
-		if(!pesquisa_duplicfunc_tabela(tab_simbolo,token->lexema)){  //pesquisa_declfunc_tabela(token.lexema)
-			//insere_tabela(token.lexema,”procedimento”,nível, rótulo) {guarda na TabSimb}
+		if(!pesquisa_duplicfunc_tabela(tab_simbolo,token->lexema)){  
             insere_tabela(tab_simbolo,token->lexema,"funcao","x",&rotulo);
 
-            fprintf(codigo,"%d,NULL, , \n",rotulo);   //Gera(rotulo,NULL,´ ´,´ ´) {CALL irá buscar este rótulo na TabSimb}           
-            rotulo = rotulo +1;                     //rotulo:= rotulo+1
+            fprintf(codigo,"%d,NULL, , \n",rotulo);            
+            rotulo = rotulo +1;                     
 
 			*token = lexico(p);
 			if(token->simbolo == "sdoispontos"){
 				*token = lexico(p);
 				if(token->simbolo == "sinteiro" || token->simbolo == "sbooleano"){
 					if(token->simbolo == "sinteiro"){
-						//TABSIMB[pc].tipo:= “função inteiro”		//trocar o tipo da funcao na tabela de simbolo
                         tab_simbolo->top->info.tipo = "funcao inteiro";
 					}else{
-						//TABSIMB[pc].tipo:= “função boolean”		//acho que da para trocar o conteudo do elemento do topo da pilha
                         tab_simbolo->top->info.tipo = "funcao booleano";
                     }
 					*token = lexico(p);
 					if(token->simbolo == "sponto_virgula"){
-                        //cont = 0;
 						analisa_bloco(p,token,tab_simbolo);
 					}
 				}else{
@@ -1443,23 +1679,28 @@ void analisa_declaracao_funcao(FILE *p, tokens *token, Stack *tab_simbolo){
         fprintf(output_arquivo,"Linha: %d\nDepois de procedimento esperado nome do procedimento.\n",linha_atual);
         exit(1);
     }
-	//DESEMPILHA OU VOLTA AO NIVEL		Entendo que tenha que apgar da tabela de simbolos o que foi colocado até aqui da func
-    //printf("\nAntes de desempilhar\n");
-    //imprimirTabela(tab_simbolo);
+	
     desempilha_nivel(tab_simbolo);
     fprintf(codigo," ,RETURN, , \n");
-    //printf("\nDepois de desempilhar\n");
-    //imprimirTabela(tab_simbolo);
+    
 }
 
 //----------------------------------------------
 //	Funcao Analisa comandos
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica dos comandos 
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_comandos(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa comandos --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
     
+    /* Verifica se o token eh o identificador de inicio do bloco de comandos, chama a funcao que verificara
+    qual(is) eh(sao) o(s) comando(s) escrito(s), enquanto nao eh o identificador de fim do bloco de comandos.
+    */
 	if(token->simbolo == "sinicio"){
 		*token = lexico(p);
 		analisa_comando_simples(p,token,tab_simbolo);
@@ -1493,6 +1734,12 @@ void analisa_comandos(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Analisa comando simples
 //----------------------------------------------
 
+// Funcionalidade: Verifica qual comando deve ser tratato e chama sua funcao 
+//                 respectiva.
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_comando_simples(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa comando simples --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
@@ -1500,6 +1747,11 @@ void analisa_comando_simples(FILE *p, tokens *token, Stack *tab_simbolo){
     Lista fila_aux;
     init_fila(&fila_aux);
 
+    /* Se o token do comando em analise for um identificador chama a analise de atribuicao 
+    e chamada de procedimentos, se for um se chama analise de comando se, enquanto chama a
+    analise do enquanto, de igual forma para leia e o escreva, e caso nao seja nenhuma das
+    opcoes chama a analise de comandos.
+    */
 	if(token->simbolo == "sidentificador"){
 		analisa_atrib_chprocedimento(p,token,tab_simbolo,&fila_aux);
 		
@@ -1524,25 +1776,32 @@ void analisa_comando_simples(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Analisa atribuicao ch procedimento
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica da atribuicao ou chamada de procedimento
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_atrib_chprocedimento(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
     printf("\n-- Entrou em atribuicao chamada de procedimento --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
-    //Parte pesquisar na tabela a primeira ocorrencia: aula: 13/10 1h07min
+    /* Verifica se o token em analise, variavel ou nome de procedimento, ja foi declarado para poder
+    ser utilizado, depois verifica se o proximo token eh o simbolo de atribuiçao, se sim chama a 
+    funcao para analise de atribuiçoes, senao chama funcao para analise de chamada de procedimentos. 
+    */
     stack_element var_bkp;
-    var_bkp = consultar_tab(tab_simbolo,token->lexema); //pesquisa na tabela de simbolo o identificador
+    var_bkp = consultar_tab(tab_simbolo,token->lexema); 
 
 	*token = lexico(p);
-    printf("Token simbolo: %s Token lexico: %s\n",token->simbolo,token->lexema); // simbolo sdoispontos, lexico :=
+    printf("Token simbolo: %s Token lexico: %s\n",token->simbolo,token->lexema); 
 
-	if(token->simbolo == "satribuicao"){ //satribuicao
-        inserir_fila(fila_aux,var_bkp); //inseriu a variavel da atribuicao na fila
+	if(token->simbolo == "satribuicao"){ 
+        inserir_fila(fila_aux,var_bkp); 
 
         *token = lexico(p);
-		analisa_atribuicao(p,token,tab_simbolo,fila_aux); //variavel var_bkp tem a variavel onde sera feito atribuicao
+		analisa_atribuicao(p,token,tab_simbolo,fila_aux); 
 	}else{
-        //se chega aqui significa que exite na tab de simbolo
-		chamada_procedimento(p, var_bkp, tab_simbolo); //se for so chamada é direto ; ai nao faz nada na funcao
+		chamada_procedimento(p, var_bkp, tab_simbolo); 
 	}
 }
 
@@ -1550,33 +1809,38 @@ void analisa_atrib_chprocedimento(FILE *p, tokens *token, Stack *tab_simbolo, Li
 //	Funcao Analisa Leia
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica do comando de leitura(entrada de dados pelo usuario)
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_leia(FILE *p, tokens *token, Stack *tab_simbolo){ 
     printf("\n-- Entrou em analisa leia --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
     stack_element aux_var;
 
-    //Gera RD
+    /* Gera o comando na linguagem de maquina para leitura de dado do usuario, verifica
+    se ha abertura de partesses e se ha uma variavel, se ela foi declarada e se eh do 
+    tipo inteiro, e entao gera o codigo de maquina store, para guardar valor na variavel. 
+    */
     fprintf(codigo," ,RD, , \n");
 
 	*token = lexico(p);
 	if(token->simbolo == "sabre_parenteses"){
 		*token = lexico(p);
 		if(token->simbolo == "sidentificador"){
-			//if(pesquisa_declvar_tabela(token.lexema)){  //(pesquisa em toda a tabela) ele nao para no x
-            if(pesquisa_existencia(tab_simbolo,token->lexema)){ //ve se ja foi declarado em algum lugar
+            if(pesquisa_existencia(tab_simbolo,token->lexema)){ 
                 aux_var = consultar_tab(tab_simbolo,token->lexema);
 				*token = lexico(p);
 				if(token->simbolo == "sfecha_parenteses"){
                     if(strcmp(aux_var.tipo,"inteiro")==0){
-                        //Gera STR de em qual variavel deve guardar o read
                         fprintf(codigo," ,STR,%d, \n",aux_var.memoria);
                     }else{
                         printf("Nao eh possivel fazer um leia de variavel booleana\n");
                         fprintf(output_arquivo,"Linha: %d\nNao eh possivel fazer um leia de variavel booleana.\n",linha_atual);
                         exit(1);
                     }
-
                     
 					*token = lexico(p);
 				}else{
@@ -1609,33 +1873,38 @@ void analisa_leia(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Analisa escreva
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica do comando de escrita(saida de dados)                
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_escreva(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa escreva --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
     stack_element var_aux;
 
+    /* Apos identificar o comando escreva verifica se ha abertura de parentesses e se ha 
+    uma variavel, se ela foi declarada e se eh do tipo inteiro e entao gera o codigo de 
+    maquina para ler o dado da memoria e de apresentar na tela.
+    */
 	*token = lexico(p);
 	if(token->simbolo == "sabre_parenteses"){
 		*token = lexico(p);
 		if(token->simbolo == "sidentificador"){
-			//if(pesquisa_ declvarfunc_tabela(token.lexema))
             if(pesquisa_existencia(tab_simbolo,token->lexema)){
                 var_aux = consultar_tab(tab_simbolo,token->lexema);
 
 				*token = lexico(p);
 				if(token->simbolo == "sfecha_parenteses"){
                     if(strcmp(var_aux.tipo,"inteiro")==0){
-                        //Gera carregamento da variavel
                         fprintf(codigo," ,LDV,%d, \n",var_aux.memoria);
-                        //Gera do print
                         fprintf(codigo," ,PRN, , \n");  
                     }else{
                         printf("Não é possivel imprimir variaveis do tipo booleano\n");
                         fprintf(output_arquivo,"Linha: %d\nNão é possivel imprimir variaveis do tipo booleano.\n",linha_atual);
                         exit(1);
                     }
-                    
 
 					*token = lexico(p);
 				}else{
@@ -1668,24 +1937,30 @@ void analisa_escreva(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Analisa Enquanto <comando repeticao>
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica do comando de repetiçao enquanto
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_enquanto(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
     printf("\n-- Entrou em analisa enquanto --\n");
     printf("Token simbolo: %s Token lexico: %s\nLinha:%d\n",token->simbolo,token->lexema,linha_atual);
 
-	//DEF auxrot1,auxrot2 inteiro
+	/* gera o codigo de maquina que indica o começo do loop, chama a funcao que analisa e forma a 
+    expressao da condiçao para a repeticao, entao transforma a expressao de infixa para posfixa
+    e entao chama a funcao para analisar semanticamente a expressao, entao se ha o identificador de
+    inicio do bloco de comando de repetiçao, entao gerar o comando na linguagem de maquina de 
+    jump para quando a expressao for falsa, analisa os comandos de dentro do enquanto, e por fim
+    gera os codigos de maquina do jump que volta ao começo do loop e que indica a saida do loop.
+    */
     int auxrot1,auxrot2;
-	//auxrot1:=rotulo
     auxrot1 = rotulo;
-	//GERA(rotulo,NULL,´ ´,´ ´) {inicio do while}
     fprintf(codigo,"%d,NULL, , \n",rotulo);
-	//rotulo:=rotulo+1
     rotulo = rotulo+1;
 
 	*token = lexico(p);
 	analisa_expressao(p,token,tab_simbolo,fila_aux);
-    //funcao lexico infix->posfix
     infix_posfix(fila_aux);
-    //analise lexical (tipos variaveis, etc)
     analise_semantica(tab_simbolo, fila_aux,"booleano");
 
 	if(token->simbolo == "sfaca"){
@@ -1714,6 +1989,11 @@ void analisa_enquanto(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_au
 //	Funcao Analisa Se <comando condicional>
 //----------------------------------------------
 
+// Funcionalidade: Analisa o sintatico do comando condicional(comando se)
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_se(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
     printf("\n-- Entrou em analisa se --\n");
     printf("Token simbolo: %s Token lexico: %s Linha:%d\n",token->simbolo,token->lexema,linha_atual);
@@ -1722,12 +2002,17 @@ void analisa_se(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
 
 	*token = lexico(p);
     
-	analisa_expressao(p,token,tab_simbolo,fila_aux);        //formacao da expressao na fila aux
-    infix_posfix(fila_aux);                                 //funcao lexico infix->posfix
-    analise_semantica(tab_simbolo, fila_aux,"booleano");    //analise lexical (tipos variaveis, etc)
+    /* Chama a funcao que analisa e forma a expressao da condiçao, entao transforma a expressao de 
+    infixa para posfixa entao chama a funcao para analisar semanticamente a expressao, em seguida 
+    se ha o identificador de inicio do bloco de comando da condicional, eh gerado o comando na 
+    linguagem de maquina de jump para quando a expressao for falsa, analisa os comandos desse
+    bloco, e faz o mesmo para o bloco de comando do senao caso haja.
+    */
+	analisa_expressao(p,token,tab_simbolo,fila_aux);        
+    infix_posfix(fila_aux);                                 
+    analise_semantica(tab_simbolo, fila_aux,"booleano");    
 
 	if(token->simbolo == "sentao"){
-        //geracao para pular para pular ao senao
         auxrot = rotulo;
         fprintf(codigo," ,JMPF,%d, \n",rotulo);
         rotulo = rotulo + 1;
@@ -1737,19 +2022,16 @@ void analisa_se(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
 
 		if(token->simbolo == "ssenao"){
             flag = 1;
-            //geracao para pular de volta ao fluxo fora do if
             auxrot2 = rotulo;
             fprintf(codigo," ,JMP,%d, \n",rotulo);
             rotulo = rotulo + 1;
 
-            //geracao que marca inicio do senao
             fprintf(codigo,"%d,NULL, , \n",auxrot);
 
 			*token = lexico(p);
 			analisa_comando_simples(p,token,tab_simbolo);
-		} //aqui nao tem else pois senão nao é obrigatorio em um comando condicional
+		}
         else{
-            //geracao que marca inicio do senao
             fprintf(codigo,"%d,NULL, , \n",auxrot);
         }
 	}else{
@@ -1759,7 +2041,6 @@ void analisa_se(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
 		exit(1);
 	}
     if(flag == 1){
-        //geracao que marca o fluxo fora do if
         fprintf(codigo,"%d,NULL, , \n",auxrot2);
     }
     
@@ -1769,10 +2050,20 @@ void analisa_se(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
 //	Funcao Analisa expressão <expressão>
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica das expressoes e controle de precedencia dos elementos da expressao
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_expressao(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
     printf("\n-- Entrou em analisa expressao --\n");
     printf("Token simbolo: %s Token lexico: %s Linha:%d\n",token->simbolo,token->lexema,linha_atual);
 
+    /* Chama a analise de expresao simples onde fara outra verificaçao no token, e entao quando voltar das
+    chamadas, verifica se o token eh um operador de maior, menor, menor igual, maior igual, igual e caso 
+    seja analisa a expressao simples. A medida que sao identificados os elementos da expressao eles sao 
+    inseridos em uma Lista auxiliar que contem apenas a expressao.
+    */
 	analisa_expressao_simples(p,token,tab_simbolo,fila_aux);
     
     stack_element auxiliar;
@@ -1791,12 +2082,23 @@ void analisa_expressao(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_a
 //	Funcao Analisa expressao simples
 //----------------------------------------------
 
+// Funcionalidade: Verificar se ha um sinal de negativo ou positivo, soma, subtraçao e "ou"
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_expressao_simples(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
     printf("\n-- Entrou em analisa expressao simples --\n");
     printf("Token simbolo: %s Token lexico: %s Linha:%d\n",token->simbolo,token->lexema,linha_atual);
 
+    /* Verifica se o token eh um operador de positivo ou negativo, entao chama analise de termo, e 
+    depois de analisar o elemento ve se o proximo elemento eh uma operacao de soma, subtraçao, ou,
+    caso seja eh chamado a funcao para analisar o proximo termo da expressao. A medida que sao
+    identificados os elementos da expressao eles sao inseridos em uma Lista auxiliar que contem 
+    apenas a expressao.
+    */
     stack_element auxiliar;
-	if(token->simbolo == "smais" || token->simbolo == "smenos"){  //smais de positivo
+	if(token->simbolo == "smais" || token->simbolo == "smenos"){
         auxiliar.tipo = "operador";
         //+u
         if(token->simbolo == "smais"){
@@ -1827,10 +2129,20 @@ void analisa_expressao_simples(FILE *p, tokens *token, Stack *tab_simbolo, Lista
 //	Funcao Analisa termo 
 //----------------------------------------------
 
+// Funcionalidade: Verifica se eh um operador de multiplicacao, divisao ou "e"
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_termo(FILE *p, tokens *token, Stack *tab_simbolo,Lista *fila_aux){
     printf("\n-- Entrou em analisa termo --\n");
     printf("Token simbolo: %s Token lexico: %s Linha:%d\n",token->simbolo,token->lexema,linha_atual);
 
+    /* Chama funcao de analise do fator entao verifica se o token eh um operador de 
+    multiplicacao, divisao ou "e", caso seja chama a funcao de analisa fator. A medida que sao
+    identificados os elementos da expressao eles sao inseridos em uma Lista auxiliar que contem 
+    apenas a expressao.
+    */
 	analisa_fator(p,token,tab_simbolo,fila_aux);
     
     stack_element auxiliar;
@@ -1842,7 +2154,6 @@ void analisa_termo(FILE *p, tokens *token, Stack *tab_simbolo,Lista *fila_aux){
 
 		*token = lexico(p);
         analisa_fator(p,token,tab_simbolo,fila_aux);
-        //analisa_expressao(p,token,tab_simbolo,fila_aux);
 	}
 }
 
@@ -1850,6 +2161,11 @@ void analisa_termo(FILE *p, tokens *token, Stack *tab_simbolo,Lista *fila_aux){
 //	Funcao Analisa fator
 //----------------------------------------------
 
+// Funcionalidade: Identifica qual o fator da expressao e faz seu tratamento na expressao.
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_fator(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
     printf("\n-- Entrou em analisa fator --\n");
     printf("(Token) Simbolo: %s\t(Token) Lexico: %s - Linha:%d\n",token->simbolo,token->lexema,linha_atual);
@@ -1858,27 +2174,25 @@ void analisa_fator(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
     
     int ind=0;
 
-	if(token->simbolo == "sidentificador"){	//variavel ou funcao
-		//Se pesquisa_tabela(token.lexema,nível,ind)
-        //imprimirTabela(tab_simbolo);
+    /* Verifica se o fator eh um identificador(uma variavel ou funcao),caso seja,
+    verifica se ja foi declarada, se o fator eh um numero, uma negaçao,
+    um abre parentesses ou um booleano. Entao esse fator eh inseridos na
+    Lista auxiliar que contem a expressao.
+    */
+	if(token->simbolo == "sidentificador"){	
         if(pesquisa_tabela(tab_simbolo,token->lexema, &ind)){ 
-            //Então Se (TabSimb[ind].tipo = “função inteiro”) ou (TabSimb[ind].tipo = “função booleano”)
-            if(ind == 1){ //funcao
-                //Inserir elemento na fila
+            if(ind == 1){ 
                 auxiliar.lexema = token->lexema;
                 auxiliar.tipo = "identificador";
                 inserir_fila(fila_aux,auxiliar);
 
-                //Então Analisa_chamada_função
                 analisa_chamada_funcao(p,token,tab_simbolo);
-            }else if(ind == 2){ //variavel
+            }else if(ind == 2){ 
                 auxiliar.lexema = token->lexema;
                 auxiliar.tipo = "identificador";
                 inserir_fila(fila_aux,auxiliar);
 
-                //Senão Léxico(token)
                 *token = lexico(p);
-                //printf("Token simbolo: %s Token lexico: %s\n",token->simbolo,token->lexema);
             }
 		}else{
             //Senão ERRO
@@ -1886,14 +2200,14 @@ void analisa_fator(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
             fprintf(output_arquivo,"Linha: %d\nVariavel ou funcao nao declaradas.\n",linha_atual);
             exit(1);
         }
-	}else if(token->simbolo == "snumero"){	//numero
+	}else if(token->simbolo == "snumero"){	
         auxiliar.lexema = token->lexema;
         auxiliar.tipo = "numero";
         inserir_fila(fila_aux,auxiliar);
 
 		*token = lexico(p);
 		
-        }else if(token->simbolo == "snao"){	//nao
+        }else if(token->simbolo == "snao"){	
             auxiliar.lexema = token->lexema;
             auxiliar.tipo = "operador";
             inserir_fila(fila_aux,auxiliar);
@@ -1901,7 +2215,7 @@ void analisa_fator(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
             *token = lexico(p);
             analisa_fator(p,token,tab_simbolo,fila_aux);
             
-            }else if(token->simbolo == "sabre_parenteses"){	//expressao entre parenteses
+            }else if(token->simbolo == "sabre_parenteses"){	
                 auxiliar.lexema = token->lexema;
                 auxiliar.tipo = token->simbolo;
                 inserir_fila(fila_aux,auxiliar);
@@ -1938,22 +2252,27 @@ void analisa_fator(FILE *p, tokens *token, Stack *tab_simbolo, Lista *fila_aux){
 //	Funcao analisa atribuicao
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica do comando de atribuiçao.
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_atribuicao(FILE *p, tokens *token, Stack *tab_simbolo,Lista *fila_aux){
     printf("\n-- Entrou em analisa atribuicao --\n");
-    //testar chamada de procedimento
-
+    
+    /* Quando identificado um comando de atribuição e feita a analise da expressao
+    que sera atribuida, se a expressao esta correta em formato e tipo, e entao
+    gera o codigo de maquina STR(store) que indicara em qual endereço da memoria
+    tal valor devera ser guardado. 
+    */
     stack_element var_atribuida = ret_elemento_fila(fila_aux,1);
     eliminar(fila_aux,1);
     
     analisa_expressao(p,token,tab_simbolo,fila_aux);
-    //imprimir_fila(fila_aux);
     infix_posfix(fila_aux);
-    //imprimir_fila(fila_aux);
     analise_semantica(tab_simbolo,fila_aux,var_atribuida.tipo);
 
-
     var_atribuida = consultar_tab(tab_simbolo,var_atribuida.lexema);
-    //entendido que é para parte de geração de codigo
     if(strcmp(var_atribuida.tipo,"funcao inteiro")==0||strcmp(var_atribuida.tipo,"funcao booleano")==0){
         fprintf(codigo," ,STR,%d, \n",0);
     }else{
@@ -1966,27 +2285,27 @@ void analisa_atribuicao(FILE *p, tokens *token, Stack *tab_simbolo,Lista *fila_a
 //	Funcao analisa chamada de procedimento
 //----------------------------------------------
 
+// Funcionalidade: Gerar o codigo de maquina da chamada
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void chamada_procedimento(FILE *p, stack_element var_bkp, Stack *tab_simbolo){
     printf("\n-- Entrou em chamada de procedimento --\n");
-    //Se entrou aqui significa que o identificador é um procedimento
     fprintf(codigo," ,CALL,%d, \n",consultar_tab(tab_simbolo,var_bkp.lexema).memoria);
-    
 }
 
 //----------------------------------------------
 //	Funcao analisa chamada funcao
 //----------------------------------------------
 
+// Funcionalidade: Pegar o proximo token quando na chamada de funcao
+// Comunicaçao:    Recebe o endereço base do arquivo de entrada, o endereço do token, e o 
+//                 endereço base da tabela de simbolos.
+//                 Nao devolve diretamente nenhuma informaçao, as modificaçoes
+//                 na tabela de simbolo, token e arquivo são feitas por referencia.
 void analisa_chamada_funcao(FILE *p, tokens *token, Stack *tab_simbolo){
     printf("\n-- Entrou em analisa chamada funcao --\n");
-    
-    //Perguntar se a chamada da funcao tem que ser antes dos codigos da expressao
-    //fprintf(codigo,"\tCALL %d\n",consultar_tab(tab_simbolo,token->lexema).memoria);
-
-    //Nao sei se é aqui mas tem que ser feito o carregamento da variavel caso usado entao funcao tbm deve ser
-    //funcao sempre no 0
-    //fprintf(codigo,"\tLDV %d\n",0);
-    
     *token = lexico(p);
 }
 
@@ -1994,8 +2313,12 @@ void analisa_chamada_funcao(FILE *p, tokens *token, Stack *tab_simbolo){
 //	Funcao Sintatico
 //----------------------------------------------
 
+// Funcionalidade: Analise sintatica de inicio de programa, e chama funcao 
+//                 que analisa bloco de programa(declaracao de variaveis, procedimentos e comandos) 
+// Comunicaçao:    Recebe da parte grafica o arquivo que deseja compilar 
+//                 Não retorna nada diretamente.
 void main(int argc, char **argv){
-    // verificando se foi passado os argumentos
+    // Verificando se foi passado os argumentos na inicialização
     if(argc != 2){
         printf("Compilou errado, por favor passe o caminho do arquivo\n");
         fprintf(output_arquivo,"Compilou errado, por favor passe o caminho do arquivo\n");
@@ -2012,67 +2335,60 @@ void main(int argc, char **argv){
     // ABRIR ARQUIVO
     //----------------------
 
-    // Le um nome do arquivo a ser aberto
-    //printf("\n\n Entre com um nome para o arquivo:\n");
-    //gets(str);
     // Abre o arquivo e verifica erro na abertura
     if ((p = fopen(argv[1], "r")) == NULL){
         printf("Erro! Impossivel abrir o arquivo!\n");
         exit(1);
     }
 
-    // Abre para escrever no arquivo
     if((codigo = fopen("gera.obj","w")) == NULL){
         printf("Erro! Impossivel abrir o arquivo da geração de codigo!\n");
         exit(1);
     }
 
-    // Abre para escrever no arquivo
     if((output_arquivo = fopen("output.txt","w")) == NULL){
         printf("Erro! Impossivel abrir o arquivo do output!\n");
         exit(1);
     }
 
-    //----------------------
-    // ANALISE SINTATICA
-    //----------------------
-
     end_disponivel = 0;
 
-    //Def rotulo inteiro
-    rotulo = 1; //rotulo:=1
+    rotulo = 1; 
 
     token = lexico(p);
     printf("%s - %s\n", token.lexema, token.simbolo);
 
+    /* Verifica se a primeira palavra do arquivo é o identificador de programa
+    e se foi definido um nome a ele, entao o insere na tabela de simbolos, gera os 
+    codigos de maquina responsaveis por indicar inicio e allocar o primeiro endereço
+    da memoria, entao faz a chamada para a analise do bloco do programa, quando toda 
+    a analise estiver sido feita, verifica se ha o identificador de fim de programa,
+    desempilha toda a tabela de simbolos restante, e encerra o programa.  
+    */
     if(token.simbolo == "sprograma")
     {
         token = lexico(p);
         printf("%s - %s\n", token.lexema, token.simbolo);
         if(token.simbolo == "sidentificador")
         {
-            //insere_tabela(token.lexema,"nomedeprograma","","")
             insere_tabela(&tab_simbolo, token.lexema,"nomedeprograma", "x", NULL); //se pah coloca "X"
             
             token = lexico(p);
             printf("%s - %s\n", token.lexema, token.simbolo);
             if (token.simbolo == "sponto_virgula")
             {
-                //gerar codigo
-                //Gera(´ ´,NULL,´ ´,´ ´) 
                 fprintf(codigo," ,START, , \n");
-                //Alocar para loop
                 fprintf(codigo," ,ALLOC,%d,%d\n",end_disponivel,1);
                 cont = 1;
                 end_disponivel += 1;
 
-                analisa_bloco(p,&token, &tab_simbolo); //analisa bloco atualiza o conteudo de token
+                analisa_bloco(p,&token, &tab_simbolo); 
                 
                 if(token.simbolo == "sponto")
                 {
                     token = lexico(p);
                     printf("%s - %s\n", token.lexema, token.simbolo);
-                    if(token.simbolo == "seof") //se acabou arquivo ou só tem comentario ao fijm
+                    if(token.simbolo == "seof") 
                     {
                         //sucesso
                         printf("SUCESSO\n");

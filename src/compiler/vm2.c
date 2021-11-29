@@ -62,6 +62,7 @@ int i;
 // Variavel que indica qual opcao de execucao foi escolhida
 int flag;
 
+// Variavel do input do usuario na parte grafica
 int var_read;
 
 // Arquivo que guarda o estado atual da memoria depois de cada comando
@@ -70,6 +71,7 @@ FILE *area_mem;
 // Arquivo que guarda as linhas dos comandos e indica seus respectivos numeros
 FILE *area_cod;
 
+// Variavel da memoria e apontador do topo da memoria
 int *mem, s=0;
 
 Lista comandos;
@@ -335,16 +337,27 @@ stack_element prox_comando(Lista* comandos, int i, int* mem, int s){
 //	Funcao VM
 //----------------------------------------------
 
+// Funcionalidade: Verifica qual o comando do codigo de maquina, e realiza
+//                 os comandos, modificando caso necessario memoria e fluxo 
+//                 de execução 
+// Comunicaçao:    Chamado pela main(), mas não recebe nenhum parametro
+//                 as variaveis de memoria, apontador de topo e arquivos são
+//                 globais.
+//                 Não há retorno na funçao, as modificaçoes necessaria sao 
+//                 feitas nas variaveis globais.
 int maquina_virtual(){
 
     /* if(argc == 2){
         //Setar as variaveis primeira vez
-
     }*/
 
     stack_element comando_atual;
     int aux;
-    //pegar o proximo comando
+    
+    /* Pega o priximo comando, verifica qual o comando e o executa, depois
+    atualiza os arquivos, que indica a linha do comando, que apresenta os 
+    dados da memoria e a saida de dados, para comunicação com a parte grafica.
+    */
     comando_atual = prox_comando(&comandos,i,mem,s);
 
     if(strcmp(comando_atual.command,"START") == 0){
@@ -593,9 +606,8 @@ int maquina_virtual(){
     }else if(strcmp(comando_atual.command,"HLT") == 0){
         printf("HLT\n");
     }
+    
     printa_memoria(mem,s);
-
-    //atualizar a mem
     return i;
 }
 
@@ -615,8 +627,14 @@ bool StartsWith(const char *a, const char *b)
 //									MAIN
 //---------------------------------------------------------------------------------
 
-int
-main(void) {
+// Funcionalidade: 
+//                 
+//                 
+// Comunicaçao:    
+//                 
+//                 
+//                                   
+int main(void) {
 	FILE *p;
 	char str[BUFFER_LENGTH] = "";
 	int linha_aux = 0;
@@ -630,6 +648,10 @@ main(void) {
 	
 	/* Max size buffer recept */
     char buffer[BUFFER_LENGTH];
+
+
+    /* AQUI
+    */
 
     fprintf(stdout, "Starting server\n");
 
