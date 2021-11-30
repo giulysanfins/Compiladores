@@ -69,7 +69,7 @@ Para compilar, siga estas etapas:
 ./cliente
 ```
 6. Feito, agora a mensagem de arquivo enviado aparecerá, e você já deve estar vendo o arquivo gerado na pasta.
-<img src="https://gyazo.com/296580837e831cb73465d4b27a94d5b7.png" alt="terminal 1">
+
 
 
 ## 📫 Contribuindo para o nosso projeto
