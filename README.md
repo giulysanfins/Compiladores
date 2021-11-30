@@ -38,8 +38,8 @@ cd Compiladores
 Será necessário dois terminais para fazer a compilação, o primeiro para o Compilador e o segundo para a Máquina Virtual.
 Para compilar, siga estas etapas:
 
-1. No Terminal 1 - 
-
+1. No Terminal 1
+```
 #### sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
 #### sudo apt install python3-venv
 #### cd into root directory 
@@ -49,9 +49,6 @@ Para compilar, siga estas etapas:
 #### pip3 install PyGObject
 #### python src/gtkcompiler.py
 #### if gtk error apt-get install gir1.2-gtksource
-
-```
-./compila.sh servidor
 ```
 2. No Terminal 2 - compile o cliente juntamente com a biblioteca criada.
 ```
