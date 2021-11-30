@@ -635,9 +635,12 @@ bool StartsWith(const char *a, const char *b)
 //                 
 //                                   
 int main(void) {
+    // Arquivo principal 
 	FILE *p;
+    // delimitador para split
 	char str[BUFFER_LENGTH] = "";
 	int linha_aux = 0;
+    // zerar a resposta
     char response[] = "200,";
 	
     /* Client and Server socket structures */
@@ -650,7 +653,7 @@ int main(void) {
     char buffer[BUFFER_LENGTH];
 
 
-    /* AQUI
+    /* Abrindo socket para passar informacoes
     */
 
     fprintf(stdout, "Starting server\n");
@@ -691,9 +694,9 @@ int main(void) {
         perror("Listen error:");
         return EXIT_FAILURE;
     }
-    
+    // debug
     fprintf(stdout, "Listening on port %d\n", PORT);
-
+    //se der erro 
     socklen_t client_len = sizeof(client);
     if ((clientfd=accept(serverfd,
         (struct sockaddr *) &client, &client_len )) == -1) {
@@ -719,13 +722,13 @@ int main(void) {
             int message_len;
             if((message_len = recv(clientfd, buffer, BUFFER_LENGTH, 0)) > 0) 
             {
-				
+				//se comecar com init_app, passar a instrucao de main()
                 /* if buffer start with 'init_app' alloc memory */
                 if(StartsWith(buffer, "init_app")) 
                 {
 
                     char delim[] = ",";
-
+                    // passar prox do buffer
                     char *ptr = strtok(buffer, delim);
 
 					mem = (int *) malloc(sizeof(int));
@@ -746,6 +749,7 @@ int main(void) {
 						printf("Erro! Impossivel abrir o arquivo!\n");
                         return EXIT_FAILURE;
 					}
+                    // passar prox do buffer
                     ptr = strtok(NULL, delim);
 				
 					//--- Forma area de programa
@@ -753,7 +757,7 @@ int main(void) {
                     //ptr = strtok(NULL, delim);
 
                 } 
-				
+				// quando o comando com virtual_machine comeca a chamar o programa principal maquina_virtual
                 if (StartsWith(buffer, "virtual_machine"))
 				{
                     printf("buffer ta %s\n",buffer);
@@ -761,6 +765,7 @@ int main(void) {
 
                     char *ptr = strtok(buffer, delim);
                     ptr = strtok(NULL, delim);
+                    // se chegar prox parametro significa que tem um numero adicional para o read, entra no else e atribui na variavel global do read
                     if(ptr == NULL){
                     }
                     else{
@@ -785,13 +790,9 @@ int main(void) {
 
             else 
             {
-                printf("RESPONSE WHEN ELSE: %s\n", response);
-
-                printf("RESPONSE WHEN ELSE: %s\n", response);
+                // passando a informacao para o cliente
                 int size_response;
-                printf("RESPONSE WHEN ELSE: %s\n", response);
                 size_response = strlen(response);
-                printf("RESPONSE WHEN ELSE: %s\n", response);
                 printf("RESPONSE: %s\n", response);
                 send(clientfd, response, size_response, 0);
                 strcpy(response,response2);
