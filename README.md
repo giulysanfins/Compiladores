@@ -38,7 +38,7 @@ cd Compiladores
 Será necessário dois terminais para fazer a compilação, o primeiro para o Compilador e o segundo para a Máquina Virtual.
 Para compilar, siga estas etapas:
 
-1. No Terminal 1
+1. No Terminal para executar o Compilador execute os seguintes comandos.
 ```
 #### sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
 #### sudo apt install python3-venv
