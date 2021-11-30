@@ -5,31 +5,17 @@
 ![Forks](https://img.shields.io/github/forks/joaohp2000/Redes_b?style=social)
 ![Likes](https://img.shields.io/github/stars/joaohp2000/Redes_b?style=social)
 
-<img src="https://gyazo.com/296580837e831cb73465d4b27a94d5b7.png" alt="exemplo imagem">
+<img src="https://github.com/giulysanfins/Compiladores/blob/master/compilador_04.png" alt="exemplo imagem">
 
-> Programa feito na linguagem C para a transferência de arquivos usando o procotopo TCP e UDP. Fazendo todas as verificações dos pacotes que foram enviados e recebidos.
-
-## 🔑 Ajustes e melhorias
-
-O projeto ainda está em desenvolvimento e as próximas atualizações serão voltadas nas seguintes tarefas:
-
-- [x] Função que cria um novo pacote.
-- [x] Função que destrua um pacote.
-- [x] Função que recebe, por parâmetro: o caminho para um arquivo (que neste caso será um txt) e também a uma quantidade máxima de bits a qual esse arquivo será fracionado. Essa função retorna um array ou uma estrutura de dados com o arquivo totalmente fragmentado conforme solicitado.
-- [x] Criação de pacotes a serem transferidos, já com conteúdo completo. Usando os fragmentos gerados pela função anterior.
-- [x] Criar uma função de envio de pacotes que recebe um pacote e um parâmetro indicando qual protocolo de camada de transporte será usado.
-- [x] Criar um outro programa que servirá para receber os pacotes transmitidos.
-- [x] Criação de um novo pacote vazio.
-- [x] Adicionar os IP's de origem (seu IP) e o de destino.
-- [x] Funções que preenche todos os campos, incluindo o payload que tem o conteúdo do pacote da camada superior (camada de transporte).
-
+> Programa desenvolvido na linguagem C com objetivo de construir um Compilador e uma Máquina Virtual. Além disso, utilizou-se pyhton para construção da parte gráfica doo projeto.
 
 ## 💻 Pré-requisitos
 
 Antes de começar, verifique se você atendeu aos seguintes requisitos:
 * Você instalou a versão mais recente do compilador [GCC](https://gcc.gnu.org/).
+* Você possui a versão mais recente do [GTK](https://www.gtk.org).
 * Você tem uma máquina Linux ou Windows (usando o WSL). 
-* Você leu [File Transfer using TCP Socket in C](https://idiotdeveloper.com/file-transfer-using-tcp-socket-in-c/).
+* Você possui Python 3 instalado em sua máquina.
 
 ## 🚀 Instalando: 
 
@@ -37,21 +23,33 @@ Para instalar o projeto, siga estas etapas:
 
 1. Baixe o código fonte do projeto com o seguinte comando:
 ```
-git clone https://github.com/joaohp2000/Redes_b.git
+git clone https://github.com/giulysanfins/Compiladores.git
+
 ```
 2. Descompacte os arquivos usando algum descompressor a sua escolha.
 3. Mude para a pasta baixada e descompactada:
 ```
-cd Redes_b
+cd Compiladores
 ```
 4. Abra um outro terminal nessa mesma pasta para facilitar a compilação.
 
 ## ☕ Compilando 
 
-É necessário abrir dois terminais para continuar com a execução.
+Será necessário dois terminais para fazer a compilação, o primeiro para o Compilador e o segundo para a Máquina Virtual.
 Para compilar, siga estas etapas:
 
-1. No Terminal 1 - compile o servidor juntamente com a biblioteca criada.
+1. No Terminal 1 - 
+
+#### sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
+#### sudo apt install python3-venv
+#### cd into root directory 
+#### python3 -m venv venv
+#### source venv/bin/activate
+#### pip3 install pycairo
+#### pip3 install PyGObject
+#### python src/gtkcompiler.py
+#### if gtk error apt-get install gir1.2-gtksource
+
 ```
 ./compila.sh servidor
 ```
@@ -59,12 +57,12 @@ Para compilar, siga estas etapas:
 ```
 ./compila.sh cliente
 ```
-3. Execute primeiramente o servidor no Terminal 1 com o seguinte comando:
+3. 
 ```
 ./servidor
 ```
-4. Será requisitado um nome do arquivo a ser enviado. (Verifique se o mesmo consta na pasta atual).
-5. Execute o cliente no Terminal 2 com o seguinte comando:
+4. 
+5. 
 ```
 ./cliente
 ```
@@ -103,14 +101,6 @@ Agradecemos às seguintes pessoas que contribuíram para este projeto:
         <img src="https://avatars.githubusercontent.com/u/32877842?v=4.png" width="100px;" alt="Foto do Giuliano Sanfins"/><br>
         <sub>
           <b>Giuliano Sanfins</b>
-        </sub>
-      </a>
-    </td>
-    <td align="center">
-      <a href="#">
-        <img src="https://avatars.githubusercontent.com/u/38138807?v=4.png" width="100px;" alt="Foto do João Henrique"/><br>
-        <sub>
-          <b>João Henrique</b>
         </sub>
       </a>
     </td>
