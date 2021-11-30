@@ -5,8 +5,13 @@
 ![Forks](https://img.shields.io/github/forks/joaohp2000/Redes_b?style=social)
 ![Likes](https://img.shields.io/github/stars/joaohp2000/Redes_b?style=social)
 
+##  Compilador
 <img src="https://github.com/giulysanfins/Compiladores/blob/master/compilador_04.png" alt="exemplo imagem">
+
+
+##  Máquina Virtual
 <img src="https://github.com/giulysanfins/Compiladores/blob/master/vm2.png" alt="exemplo imagem">
+
 > Programa desenvolvido na linguagem C com objetivo de construir um Compilador e uma Máquina Virtual. Além disso, utilizou-se pyhton para construção da parte gráfica doo projeto.
 
 ## 💻 Pré-requisitos
