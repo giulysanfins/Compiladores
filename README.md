@@ -6,7 +6,7 @@
 ![Likes](https://img.shields.io/github/stars/joaohp2000/Redes_b?style=social)
 
 <img src="https://github.com/giulysanfins/Compiladores/blob/master/compilador_04.png" alt="exemplo imagem">
-
+<img src="https://github.com/giulysanfins/Compiladores/blob/master/vm2.png" alt="exemplo imagem">
 > Programa desenvolvido na linguagem C com objetivo de construir um Compilador e uma Máquina Virtual. Além disso, utilizou-se pyhton para construção da parte gráfica doo projeto.
 
 ## 💻 Pré-requisitos
