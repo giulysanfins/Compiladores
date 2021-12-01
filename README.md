@@ -46,33 +46,46 @@ Instale as seguintes dependências:
 #### sudo apt install python3-venv
 #### sudo apt-get install gir1.2-gtksource
 
-#### python3 -m venv venv
-#### source venv/bin/activate
-
-Instale as últimas dependências:
-#### pip3 install pycairo
-#### pip3 install PyGObject
-
-Execute o programa de preferência:
-#### - python3 src/gtkcompiler.py
-#### - python3 src/gtkdebuger.py
 ```
 2. Mude para o diretório de Compiladores e crie o ambiente virtual:
 ```
-./compila.sh cliente
-```
-3. 
-```
-./servidor
-```
-4. 
-5. 
-```
-./cliente
-```
-6. Feito, agora a mensagem de arquivo enviado aparecerá, e você já deve estar vendo o arquivo gerado na pasta.
+#### python3 -m venv venv
+#### source venv/bin/activate
 
+```
+3.  Instale as últimas dependências:
 
+```
+#### pip3 install pycairo
+#### pip3 install PyGObject
+```
+4. Execute o programa de preferência:
+```
+#### - python3 src/gtkcompiler.py
+#### - python3 src/gtkdebuger.py
+```
+
+## ☕ Compilando - release
+
+Será necessário dois terminais para fazer a compilação completa, o primeiro para o Compilador  e o segundo para a Máquina Virtual.
+Para compilar, siga estas etapas:
+
+1. Download da Release
+```
+### Faça o download dos releases Virtual Machine Executable e 
+### Compiler Executable no Github.
+
+```
+
+2.  Descompacte com o software de preferência; 
+```
+### Mude para a pasta root - cd gtkdebuger ou cd gtkcompiler;
+```
+3. Execute o binário 
+```
+### ./gtkdebuger para a máquina virtual 
+### ./gtkcompiler para o compilador.
+```
 
 ## 📫 Contribuindo para o nosso projeto
 <!---Se o seu README for longo ou se você tiver algum processo ou etapas específicas que deseja que os contribuidores sigam, considere a criação de um arquivo CONTRIBUTING.md separado--->
@@ -118,17 +131,3 @@ Agradecemos às seguintes pessoas que contribuíram para este projeto:
     </td>
   </tr>
 </table>
-
-
-
-
-# Compiladores
-#### sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
-#### sudo apt install python3-venv
-#### cd into root directory 
-#### python3 -m venv venv
-#### source venv/bin/activate
-#### pip3 install pycairo
-#### pip3 install PyGObject
-#### python src/gtkcompiler.py
-#### if gtk error apt-get install gir1.2-gtksource
