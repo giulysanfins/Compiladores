@@ -32,7 +32,7 @@ Para instalar o projeto, siga estas etapas:
 Faça o download dos releases Virtual Machine Executable e 
 Compiler Executable no Github ou baixe o código com o link do github.
 link: git clone https://github.com/giulysanfins/Compiladores.git
-
+```
 
 ## ☕ Compilando - Source code
 
