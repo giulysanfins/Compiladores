@@ -19,8 +19,9 @@
 Antes de começar, verifique se você atendeu aos seguintes requisitos:
 * Você instalou a versão mais recente do compilador [GCC](https://gcc.gnu.org/).
 * Você possui a versão mais recente do [GTK](https://www.gtk.org).
-* Você tem uma máquina Linux ou Windows (usando o WSL). 
+* Você tem uma máquina Linux. 
 * Você possui Python 3 instalado em sua máquina.
+* Dual Core++
 
 ## 🚀 Instalando: 
 
@@ -28,34 +29,35 @@ Para instalar o projeto, siga estas etapas:
 
 1. Baixe o código fonte do projeto com o seguinte comando:
 ```
-git clone https://github.com/giulysanfins/Compiladores.git
+Faça o download dos releases Virtual Machine Executable e 
+Compiler Executable no Github ou baixe o código com o link do github.
+link: git clone https://github.com/giulysanfins/Compiladores.git
 
-```
-2. Descompacte os arquivos usando algum descompressor a sua escolha.
-3. Mude para a pasta baixada e descompactada:
-```
-cd Compiladores
-```
-4. Abra um outro terminal nessa mesma pasta para facilitar a compilação.
 
-## ☕ Compilando 
+## ☕ Compilando - Source code
 
-Será necessário dois terminais para fazer a compilação, o primeiro para o Compilador e o segundo para a Máquina Virtual.
+Será necessário dois terminais para fazer a compilação completa, o primeiro para o Compilador  e o segundo para a Máquina Virtual.
 Para compilar, siga estas etapas:
 
 1. No Terminal para executar o Compilador execute os seguintes comandos.
 ```
+Instale as seguintes dependências:
 #### sudo apt install libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-3.0
 #### sudo apt install python3-venv
-#### cd into root directory 
+#### sudo apt-get install gir1.2-gtksource
+
 #### python3 -m venv venv
 #### source venv/bin/activate
+
+Instale as últimas dependências:
 #### pip3 install pycairo
 #### pip3 install PyGObject
-#### python src/gtkcompiler.py
-#### if gtk error apt-get install gir1.2-gtksource
+
+Execute o programa de preferência:
+#### - python3 src/gtkcompiler.py
+#### - python3 src/gtkdebuger.py
 ```
-2. No Terminal 2 - compile o cliente juntamente com a biblioteca criada.
+2. Mude para o diretório de Compiladores e crie o ambiente virtual:
 ```
 ./compila.sh cliente
 ```
